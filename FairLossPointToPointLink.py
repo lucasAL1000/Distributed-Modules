@@ -31,20 +31,16 @@ class FairLossPointToPointLink:
 		self.socket = socket(type=SOCK_DGRAM)
 		self.socket.bind(address)
 
-		self.execution = Lock()
-
 		self.threads = [Thread(target=f) for f in (self.watch,)]
 		for t in self.threads:
 			t.start()
 
 	def Send(self, q, m):
 		# Requests to send message m to process q.
-		with self.execution:
 			self.socket.sendto(m.encode(), q)
 
 	def Deliver(self, p, m):
 		# Delivers message m sent by process p.
-		with self.execution:
 			self.handle_delivery(p, m)
 
 	def watch(self):
