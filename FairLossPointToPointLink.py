@@ -1,4 +1,4 @@
-from threading import Thread, Lock
+from threading import Thread
 from socket import socket, SOCK_DGRAM
 
 class FairLossPointToPointLink:
@@ -29,7 +29,7 @@ class FairLossPointToPointLink:
 		self.handle_delivery = on_delivery
 
 		self.socket = socket(type=SOCK_DGRAM)
-		self.socket.bind(address)
+		self.socket.bind(solve_address(address))
 
 		self.threads = [Thread(target=f) for f in (self.watch,)]
 		for t in self.threads:
@@ -37,14 +37,25 @@ class FairLossPointToPointLink:
 
 	def Send(self, q, m):
 		# Requests to send message m to process q.
+			q = solve_address(q)
 			self.socket.sendto(m.encode(), q)
 
 	def Deliver(self, p, m):
 		# Delivers message m sent by process p.
-			self.handle_delivery(p, m)
+			p = solve_address(p)
+			self.handle_delivery(':'.join(map(str, p)), m)
 
 	def watch(self):
 		# Watches the link.
 		while(True):
 			message, address = self.socket.recvfrom(1024)
 			self.Deliver(address, message.decode())
+
+def solve_address(addr):
+	# Converts a string address (ip:port) to the tuple used by socket.
+	if(type(addr) == str):
+		ip, port = addr.split(':')
+		port = int(port)
+		return (ip, port)
+	else:
+		return addr
