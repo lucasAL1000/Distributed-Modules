@@ -77,7 +77,7 @@ class Manager:
 
 				# Join group upon request
 				elif(message.startswith(GROUP)):
-					managers = message[len(GROUP)+1:]
+					managers = message[len(GROUP)+1:].split(' ')
 					if(any(m in self.group for m in managers)):
 						self.group.update(managers)
 
