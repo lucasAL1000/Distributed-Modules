@@ -24,7 +24,6 @@ class Manager:
 		self.threads = [Thread(target=f) for f in (self.listen,)]
 		for t in self.threads:
 			t.start()
-		self.broadcast(EXISTS)
 
 	def set_ports(self):
 		# Find n unused ports
@@ -59,9 +58,13 @@ class Manager:
 		if(all(any(ip.startswith(other) for ip in self.other_processes) for other in self.group - {self.ip})):
 			self.start()
 
+	def on_started_listening(self):
+		self.broadcast(EXISTS)
+
 	def listen(self):
 		with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
 			s.bind(('', PORT))
+			self.on_started_listening()
 			while(True):
 				message, address = s.recvfrom(1024)
 				address = address[0]
