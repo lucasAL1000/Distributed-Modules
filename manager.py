@@ -18,7 +18,7 @@ class Manager:
 		self.ip_options = get_ip_options()
 		if(len(self.ip_options) > 1):
 			print('Choose an ip:')
-			print('\n'.join(': '.join(enumerate(self.ip_options))))
+			print('\n'.join(f'{i}: {ip}' for i, ip in enumerate(self.ip_options)))
 			op = int(input())
 		else:
 			op = 0
