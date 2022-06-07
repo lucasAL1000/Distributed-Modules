@@ -16,7 +16,13 @@ class Manager:
 		self.other_processes = other_processes
 
 		self.ip_options = get_ip_options()
-		self.ip = self.ip_options[-1] if self.ip_options else None
+		if(len(self.ip_options) > 1):
+			print('Choose an ip:')
+			print('\n'.join(': '.join(enumerate(self.ip_options))))
+			op = int(input())
+		else:
+			op = 0
+		self.ip = self.ip_options[op] if self.ip_options else None
 
 		self.known = set()
 		self.group = {self.ip}
