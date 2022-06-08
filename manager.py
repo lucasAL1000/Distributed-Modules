@@ -88,7 +88,10 @@ class Manager:
 				elif(message.startswith(GROUP)):
 					managers = message[len(GROUP)+1:].split(' ')
 					if(any(m in self.group for m in managers)):
+						before = len(self.group)
 						self.group.update(managers)
+						if(len(self.group) != before):
+							self.broadcast(f'{GROUP} {" ".join(self.group)}')
 
 				# Receive command to start, updating the process list
 				elif(message.startswith(READY)):
