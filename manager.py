@@ -27,7 +27,7 @@ class Manager:
 		self.known = set()
 		self.group = {self.ip}
 
-		self.threads = [Thread(target=f) for f in (self.listen,)]
+		self.threads = [Thread(target=f, daemon=True) for f in (self.listen,)]
 		for t in self.threads:
 			t.start()
 
