@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from importlib import import_module
 import traceback
+from inspect import getfullargspec
 
 if(__name__ == '__main__'):
 	try:
@@ -11,12 +12,19 @@ if(__name__ == '__main__'):
 		args = parser.parse_args().__dict__
 
 		Module = getattr(import_module(args['module']), args['module'])
+		spec = getfullargspec(Module)
 
-		module = Module(args['own_address'])
+		if(spec.varargs):
+			module = Module(args['own_address'], *args['participants'])
+		else:
+			module = Module(args['own_address'])
 
 		while(True):
 			message = input()
-			module.Send(args['participants'][0], message)
+			if(getattr(module, 'Broadcast', None)):
+				module.Broadcast(message)
+			else:
+				module.Send(args['participants'][0], message)
 	except Exception as e:
 		traceback.print_exc()
 		input()
