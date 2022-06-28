@@ -4,7 +4,6 @@ from socket import socket, SOCK_STREAM
 class PerfectPointToPointLink:
 	"""
 	Module 2.3: Interface and properties of perfect point-to-point links
-	Uses: FairLossPointToPointLink
 
 	Events
 	------
