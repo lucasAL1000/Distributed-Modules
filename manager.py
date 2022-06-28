@@ -51,8 +51,8 @@ class Manager:
 			others = [p for p in self.own_processes if p != name] + list(self.other_processes)
 			subprocess.Popen(f'python chat.py {module} {name} {" ".join(others)}', creationflags=subprocess.CREATE_NEW_CONSOLE)
 
-	def add(self, other):
-		self.group.add(other)
+	def add(self, *others):
+		self.group.update(*others)
 		self.broadcast(f'{GROUP} {" ".join(self.group)}')
 
 	def ready(self):
