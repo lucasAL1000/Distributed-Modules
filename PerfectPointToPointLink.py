@@ -1,6 +1,5 @@
-import json
-from threading import Thread, Lock
-from FairLossPointToPointLink import FairLossPointToPointLink as FLL
+from threading import Thread
+from socket import socket, SOCK_STREAM
 
 class PerfectPointToPointLink:
 	"""
@@ -29,61 +28,38 @@ class PerfectPointToPointLink:
 	def __init__(self, address, on_delivery = print):
 		self.handle_delivery = on_delivery
 
-		self.link = FLL(address, self.receive)
+		self.socket = socket(type=SOCK_STREAM)
+		self.socket.bind(solve_address(address))
 
-		self.pending = set()
-		self.delivered = set()
-		self.signature = str(address)
-
-		self.execution = Lock()
-		self.id_counter = 0
+		self.threads = [Thread(target=f) for f in (self.watch,)]
+		for t in self.threads:
+			t.start()
 
 	def Send(self, q, m):
 		# Requests to send message m to process q.
-		with self.execution:
-			message = json.dumps({
-				'id': self.get_uid(),
-				'message': m
-			})
-			self.pending.add((q, message))
-
-		# Keep sending until delivery is confirmed.
-		t = Thread(target=self.send_until_confirmed, args=(q, message))
-		self.threads.append(t)
-		t.start()
+			q = solve_address(q)
+			s = socket(type=SOCK_STREAM)
+			s.connect(q)
+			s.sendto(m.encode(), q)
 
 	def Deliver(self, p, m):
 		# Delivers message m sent by process p.
-		with self.execution:
-			self.handle_delivery(p, m)
+			p = solve_address(p)
+			self.handle_delivery(':'.join(map(str, p)), m)
 
-	def send_until_confirmed(self, q, message):
-		# Keep sending until confirmed.
-		self.execution.acquire()
-		while((q, message) in self.pending):
-			self.execution.release()
-			self.execution.acquire()
+	def watch(self):
+		# Watches the link.
+		while(True):
+			self.socket.listen(1)
+			connection, address = self.socket.accept()
+			message, _ = connection.recvfrom(1024)
+			self.Deliver(address, message.decode())
 
-			self.link.Send(q, message)
-
-	def receive(self, p, message):
-		# Receives a message and interprets it.
-		message = json.loads(message)
-
-		if(self.signature in message['id']):
-			# Message is a confirmation.
-			with self.execution:
-				pending -= {(p, message)}
-
-		else:
-			# Deliver if not delivered.
-			if(not message in self.delivered):
-				self.Deliver(p, message['message'])
-				self.delivered.add((p, message))
-
-			# Send confirmation.
-			self.link.Send(p, message)
-
-	def get_uid(self):
-		self.id_counter += 1
-		return self.signature + str(self.id_counter)
+def solve_address(addr):
+	# Converts a string address (ip:port) to the tuple used by socket.
+	if(type(addr) == str):
+		ip, port = addr.split(':')
+		port = int(port)
+		return (ip, port)
+	else:
+		return addr
