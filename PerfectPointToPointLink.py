@@ -38,8 +38,11 @@ class PerfectPointToPointLink:
 		# Requests to send message m to process q.
 			q = solve_address(q)
 			s = socket(type=SOCK_STREAM)
-			s.connect(q)
-			s.sendto(m.encode(), q)
+			try:
+				s.connect(q)
+				s.sendto(m.encode(), q)
+			except ConnectionError:
+				pass
 
 	def Deliver(self, p, m):
 		# Delivers message m sent by process p.
